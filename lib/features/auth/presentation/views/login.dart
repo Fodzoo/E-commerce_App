@@ -117,110 +117,127 @@ class _LoginViewState extends State<LoginView> {
 
                   // Email Text Field
                   AppTextField(
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your email';
+                      }
+                      if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$', caseSensitive: false).hasMatch(value)) {
+                        return 'Please enter a valid email';
+                      }
+                      return null;
+                    },
                     controller: _emailController,
                     hintText: 'Your Email',
-                    prefixIcon: Icons.mail_outline,
-                    keyboardType: TextInputType.emailAddress,
-                    textInputAction: TextInputAction.next,
+                                    prefixIcon: Icons.mail_outline,
+                                    keyboardType: TextInputType.emailAddress,
+                                    textInputAction: TextInputAction.next,
                   ),
                   SizedBox(height: context.spacing.sm),
-
+                                    
                   // Password Text Field
                   AppTextField(
-                    controller: _passwordController,
-                    hintText: 'Password',
-                    prefixIcon: Icons.lock_outline,
-                    obscureText: _obscurePassword,
-                    suffixIcon: _obscurePassword
-                        ? Icons.visibility_off_outlined
-                        : Icons.visibility_outlined,
-                    onSuffixPressed: () {
-                      setState(() {
-                        _obscurePassword = !_obscurePassword;
-                      });
+                    validator: (value) {
+                      if (value == null || value.isEmpty) {
+                        return 'Please enter your email';
+                      }
+                      if (!RegExp(r'^[^@]+@[^@]+\.[^@]+$', caseSensitive: false).hasMatch(value)) {
+                        return 'Please enter a valid email';
+                      }
+                      return null;
                     },
-                    textInputAction: TextInputAction.done,
+                                    controller: _passwordController,
+                                    hintText: 'Password',
+                                    prefixIcon: Icons.lock_outline,
+                                    obscureText: _obscurePassword,
+                                    suffixIcon: _obscurePassword
+                                        ? Icons.visibility_off_outlined
+                                        : Icons.visibility_outlined,
+                                    onSuffixPressed: () {
+                                      setState(() {
+                                        _obscurePassword = !_obscurePassword;
+                                      });
+                                    },
+                                    textInputAction: TextInputAction.done,
                   ),
                   SizedBox(height: context.spacing.md),
-
+                                    
                   // Forgot Password Link
                   Align(
-                    alignment: Alignment.centerRight,
-                    child: GestureDetector(
-                      onTap: () {
-                        // Navigate or trigger forgot password
-                      },
-                      child: Text(
-                        'Forgot Password?',
-                        style: context.textStyles.title.copyWith(
-                          color: AppColors.primary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
+                                    alignment: Alignment.centerRight,
+                                    child: GestureDetector(
+                                      onTap: () {
+                                        // Navigate or trigger forgot password
+                                      },
+                                      child: Text(
+                                        'Forgot Password?',
+                                        style: context.textStyles.title.copyWith(
+                                          color: AppColors.primary,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
                   ),
                   SizedBox(height: context.spacing.md),
-
+                                    
                   // Sign In Button
                   AppButton(
-                    text: 'Sign In',
-                    onPressed: _onSignIn,
-                    isLoading: _isLoading,
+                                    text: 'Sign In',
+                                    onPressed: _onSignIn,
+                                    isLoading: _isLoading,
                   ),
                   SizedBox(height: context.spacing.lg),
-
+                                    
                   // OR Divider
                   Row(
-                    children: [
-                      const Expanded(
-                        child: Divider(color: AppColors.border, thickness: 1),
-                      ),
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: context.spacing.sm),
-                        child: Text(
-                          'OR',
-                          style: context.textStyles.title.copyWith(
-                            color: AppColors.textSecondary,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                      const Expanded(
-                        child: Divider(color: AppColors.border, thickness: 1),
-                      ),
-                    ],
+                                    children: [
+                                      const Expanded(
+                                        child: Divider(color: AppColors.border, thickness: 1),
+                                      ),
+                                      Padding(
+                                        padding: EdgeInsets.symmetric(horizontal: context.spacing.sm),
+                                        child: Text(
+                                          'OR',
+                                          style: context.textStyles.title.copyWith(
+                                            color: AppColors.textSecondary,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ),
+                                      const Expanded(
+                                        child: Divider(color: AppColors.border, thickness: 1),
+                                      ),
+                                    ],
                   ),
                   SizedBox(height: context.spacing.lg),
-
+                                    
                   // Register Prompt
                   Wrap(
-                    alignment: WrapAlignment.center,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    children: [
-                      Text(
-                        "Don't have an account? ",
-                        style: context.textStyles.body,
-                      ),
-                      GestureDetector(
-                        onTap: () {
-                          // Navigate to register view
-                        },
-                        child: Text(
-                          'Register',
-                          style: context.textStyles.title.copyWith(
-                            color: AppColors.primary,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ],
+                                    alignment: WrapAlignment.center,
+                                    crossAxisAlignment: WrapCrossAlignment.center,
+                                    children: [
+                                      Text(
+                                        "Don't have an account? ",
+                                        style: context.textStyles.body,
+                                      ),
+                                      GestureDetector(
+                                        onTap: () {
+                                          // Navigate to register view
+                                        },
+                                        child: Text(
+                                          'Register',
+                                          style: context.textStyles.title.copyWith(
+                                            color: AppColors.primary,
+                                            fontWeight: FontWeight.w700,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                   ),
-                ],
+         ]   ),
               ),
-            ),
-          ),
         ),
       ),
+      )
     );
   }
 }

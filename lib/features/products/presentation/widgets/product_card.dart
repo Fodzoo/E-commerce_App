@@ -11,10 +11,8 @@ class ProductCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Note: Assuming a simple calculation for discount percentage for display
-    final double discountPercent = product.price > 0 
-        ? ((product.price - product.discountPrice) / product.price * 100) 
-        : 0;
+    final imageUrl = product.thumbnail ??
+        (product.images.isNotEmpty ? product.images.first : null);
 
     return Container(
       padding: EdgeInsets.all(context.spacing.sm),
@@ -29,21 +27,12 @@ class ProductCard extends StatelessWidget {
           Expanded(
             child: ClipRRect(
               borderRadius: AppRadius.card,
-              child: SizedBox(
-                width: double.infinity,
-                // In a real app we'd use Image.network, but using the placeholder logic from before
-                child: Container(
-                  color: AppColors.surface,
-                  child: const Center(
-                    child: Icon(Icons.image, size: 50, color: AppColors.border),
-                  ),
-                ),
-              ),
+              child: _ProductImage(url: imageUrl),
             ),
           ),
           SizedBox(height: context.spacing.sm),
           Text(
-            product.name,
+            product.title,
             style: context.textStyles.title,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -51,37 +40,100 @@ class ProductCard extends StatelessWidget {
           SizedBox(height: context.spacing.xs),
           Row(
             children: [
-              const Icon(Icons.star, color: AppColors.star, size: 12),
-              const Icon(Icons.star, color: AppColors.star, size: 12),
-              const Icon(Icons.star, color: AppColors.star, size: 12),
-              const Icon(Icons.star, color: AppColors.star, size: 12),
-              const Icon(Icons.star_border, color: AppColors.star, size: 12),
+              const Icon(Icons.star, color: AppColors.star, size: 14),
+              SizedBox(width: context.spacing.xs),
+              Text(
+                product.rating.toStringAsFixed(1),
+                style: context.textStyles.caption,
+              ),
+              const Spacer(),
+              if (!product.inStock)
+                Text(
+                  'Out of stock',
+                  style: context.textStyles.caption.copyWith(
+                    color: AppColors.discount,
+                  ),
+                ),
             ],
           ),
           SizedBox(height: context.spacing.xs),
           Text(
-            '\$${product.discountPrice.toStringAsFixed(2)}',
+            '\$${product.discountedPrice.toStringAsFixed(2)}',
             style: context.textStyles.price,
           ),
           SizedBox(height: context.spacing.xs),
-          Row(
-            children: [
-              Text(
-                '\$${product.price.toStringAsFixed(2)}',
-                style: context.textStyles.oldPrice,
-              ),
-              SizedBox(width: context.spacing.xs),
-              Flexible(
-                child: Text(
-                  '${discountPercent.toStringAsFixed(0)}% Off',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.textStyles.discount,
+          if (product.hasDiscount)
+            Row(
+              children: [
+                Text(
+                  '\$${product.price.toStringAsFixed(2)}',
+                  style: context.textStyles.oldPrice,
                 ),
-              ),
-            ],
-          ),
+                SizedBox(width: context.spacing.xs),
+                Flexible(
+                  child: Text(
+                    '${product.discountPercentage.toStringAsFixed(0)}% Off',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: context.textStyles.discount,
+                  ),
+                ),
+              ],
+            )
+          else
+            Text(
+              product.brand ?? product.category,
+              style: context.textStyles.caption,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
         ],
+      ),
+    );
+  }
+}
+
+class _ProductImage extends StatelessWidget {
+  //todo: replace with cash network img
+  final String? url;
+
+  const _ProductImage({this.url});
+
+  @override
+  Widget build(BuildContext context) {
+    if (url == null || url!.isEmpty) return const _ImagePlaceholder();
+
+    return Image.network(
+      url!,
+      width: double.infinity,
+      fit: BoxFit.cover,
+      loadingBuilder: (context, child, progress) {
+        if (progress == null) return child;
+        return const _ImagePlaceholder(showLoader: true);
+      },
+      errorBuilder: (context, error, stackTrace) => const _ImagePlaceholder(),
+    );
+  }
+}
+
+class _ImagePlaceholder extends StatelessWidget {
+  final bool showLoader;
+
+  const _ImagePlaceholder({this.showLoader = false});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      color: AppColors.surface,
+      child: Center(
+        child: showLoader
+            ? const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2.5),
+              )
+            : const Icon(Icons.image, size: 50, color: AppColors.border),
       ),
     );
   }

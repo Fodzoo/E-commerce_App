@@ -1,4 +1,6 @@
-import 'package:e_commerce/features/auth/data/datasource/loginservice.dart';
+import 'package:e_commerce/core/network/api_exceptions.dart';
+import 'package:e_commerce/core/services/service_locator.dart';
+import 'package:e_commerce/features/auth/data/repositories/auth_repository.dart';
 import 'package:e_commerce/features/products/presentation/views/products_view.dart';
 import 'package:flutter/material.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -17,7 +19,9 @@ class LoginView extends StatefulWidget {
 class _LoginViewState extends State<LoginView> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  late final AuthRepository _authRepository = getIt<AuthRepository>();
   bool _obscurePassword = true;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -25,22 +29,30 @@ class _LoginViewState extends State<LoginView> {
     _passwordController.dispose();
     super.dispose();
   }
-//handle on cubit not here
-  void _onSignIn() {
-    login(
-      {
-        "username": _emailController.text,
-        "password": _passwordController.text,
-      }
-    );
-    // Handle sign in logic 
-    // if sucess login
-    
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const ProductsView(),
-      ),
-    );
+
+  Future<void> _onSignIn() async {
+    FocusScope.of(context).unfocus();
+    setState(() => _isLoading = true);
+
+    try {
+      // Repository logs in via API and syncs tokens to the local cache.
+      await _authRepository.login(
+        username: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
+
+      if (!mounted) return;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const ProductsView()),
+      );
+    } on ApiException catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message)),
+      );
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
   }
 
   @override
@@ -153,6 +165,7 @@ class _LoginViewState extends State<LoginView> {
                   AppButton(
                     text: 'Sign In',
                     onPressed: _onSignIn,
+                    isLoading: _isLoading,
                   ),
                   SizedBox(height: context.spacing.lg),
 
@@ -180,8 +193,9 @@ class _LoginViewState extends State<LoginView> {
                   SizedBox(height: context.spacing.lg),
 
                   // Register Prompt
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
+                  Wrap(
+                    alignment: WrapAlignment.center,
+                    crossAxisAlignment: WrapCrossAlignment.center,
                     children: [
                       Text(
                         "Don't have an account? ",

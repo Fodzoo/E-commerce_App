@@ -16,7 +16,15 @@ typedef OnTokenRefreshedCallback = void Function(
 /// when encountering a 401 Unauthorized response.
 class AuthInterceptor extends QueuedInterceptor {
   final TokenStorage tokenStorage;
+
+  /// Bare Dio (no interceptors) used only to hit the refresh endpoint, so the
+  /// refresh call can never recursively trigger this interceptor.
   final Dio _refreshDio;
+
+  /// The main Dio this interceptor is attached to. Used to replay the original
+  /// request once a fresh token has been synced to local storage.
+  final Dio? _retryDio;
+
   final String refreshEndpoint;
   final OnUnauthorizedCallback? onUnauthorized;
   final OnTokenRefreshedCallback? onTokenRefreshed;
@@ -24,21 +32,24 @@ class AuthInterceptor extends QueuedInterceptor {
   AuthInterceptor({
     required this.tokenStorage,
     Dio? refreshDio,
+    Dio? retryDio,
     this.refreshEndpoint = ApiEndpoints.refresh,
     this.onUnauthorized,
     this.onTokenRefreshed,
-  }) : _refreshDio = refreshDio ??
-            Dio(
-              BaseOptions(
-                baseUrl: ApiEndpoints.baseUrl,
-                connectTimeout: ApiEndpoints.connectTimeout,
-                receiveTimeout: ApiEndpoints.receiveTimeout,
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Accept': 'application/json',
-                },
-              ),
-            );
+  })  : _refreshDio = refreshDio ?? _defaultRefreshDio(),
+        _retryDio = retryDio;
+
+  static Dio _defaultRefreshDio() => Dio(
+        BaseOptions(
+          baseUrl: ApiEndpoints.baseUrl,
+          connectTimeout: ApiEndpoints.connectTimeout,
+          receiveTimeout: ApiEndpoints.receiveTimeout,
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+        ),
+      );
 
   @override
   void onRequest(
@@ -48,8 +59,10 @@ class AuthInterceptor extends QueuedInterceptor {
 
     // Check if the request explicitly disables authentication
     final bool requiresAuth = options.extra['requiresAuth'] ?? true;
-//if 401 == request 
+
     if (requiresAuth) {
+      // Pull the token from the local cache (shared_preferences) so the API
+      // call always carries the last synced session.
       final accessToken = await tokenStorage.getAccessToken();
       if (accessToken != null && accessToken.isNotEmpty) {
         options.headers['Authorization'] = 'Bearer $accessToken';
@@ -75,7 +88,7 @@ class AuthInterceptor extends QueuedInterceptor {
 
       if (refreshToken != null && refreshToken.isNotEmpty) {
         try {
-          // Attempt refreshing the token using a isolated Dio instance
+          // Ask the API for a fresh token via the isolated Dio instance.
           final refreshResponse = await _refreshDio.post(
             refreshEndpoint,
             data: {
@@ -96,7 +109,7 @@ class AuthInterceptor extends QueuedInterceptor {
                 ?.toString();
 
             if (newAccessToken != null && newAccessToken.isNotEmpty) {
-              // 1. Save new tokens to storage
+              // 1. Sync the refreshed tokens back into the local cache.
               await tokenStorage.saveTokens(
                 accessToken: newAccessToken,
                 refreshToken: newRefreshToken ?? refreshToken,
@@ -108,13 +121,15 @@ class AuthInterceptor extends QueuedInterceptor {
                 newRefreshToken ?? refreshToken,
               );
 
-              // 3. Clone original request options and update headers
+              // 3. Update the failed request headers and mark it as retried.
               final requestOptions = err.requestOptions;
               requestOptions.headers['Authorization'] = 'Bearer $newAccessToken';
               requestOptions.extra['isRetry'] = true;
 
-              // 4. Retry the failed request with the fresh token
-              final retryResponse = await _refreshDio.fetch(requestOptions);
+              // 4. Replay the request through the main client so the fresh
+              //    token (and all other interceptors) apply.
+              final retryResponse =
+                  await (_retryDio ?? _refreshDio).fetch(requestOptions);
               return handler.resolve(retryResponse);
             }
           }

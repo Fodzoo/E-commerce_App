@@ -1,18 +1,23 @@
 import '../../../../core/network/api_endpoints.dart';
+import '../../../../core/network/api_exceptions.dart';
 import '../../../../core/network/dio_client.dart';
+import '../models/user_model.dart';
 
-/// Service responsible for authentication API calls.
+/// Low-level auth API datasource.
+///
+/// All traffic goes through [DioClient], which attaches the auth header,
+/// transparently refreshes tokens, and turns every [DioException] into an
+/// [ApiException]. This class only knows how to call the endpoints.
 class LoginService {
   final DioClient _dioClient;
 
-  LoginService({DioClient? dioClient})
-      : _dioClient = dioClient ?? DioClient.instance;
+  LoginService({required DioClient dioClient}) : _dioClient = dioClient;
 
-  /// Logs in a user using [username] and [password].
+  /// Authenticates with the API and returns the raw JSON payload.
   ///
-  /// On successful authentication, automatically stores the returned
-  /// [accessToken] and [refreshToken] in [DioClient].
-  Future<Map<String, dynamic>> loginUser({
+  /// Throws [ApiException] on any failure. Tokens are intentionally *not*
+  /// persisted here — the repository owns the local cache / API sync.
+  Future<Map<String, dynamic>> login({
     required String username,
     required String password,
   }) async {
@@ -22,36 +27,38 @@ class LoginService {
         'username': username,
         'password': password,
       },
-      requiresAuth: false, // Login endpoint is public
+      requiresAuth: false,
     );
 
-    final data = Map<String, dynamic>.from(response.data as Map);
-
-    // Save tokens if available in response
-    final accessToken = data['accessToken']?.toString();
-    final refreshToken = data['refreshToken']?.toString();
-
-    if (accessToken != null && refreshToken != null) {
-      await _dioClient.setTokens(
-        accessToken: accessToken,
-        refreshToken: refreshToken,
-      );
-    }
-
-    return data;
+    return _asJsonMap(response.data);
   }
-}
 
-/// Top-level singleton helper for convenient access.
-final LoginService loginService = LoginService();
+  /// Fetches the profile of the currently authenticated user.
+  Future<UserModel> fetchCurrentUser() async {
+    final response = await _dioClient.get(ApiEndpoints.me);
+    return UserModel.fromJson(_asJsonMap(response.data));
+  }
 
-/// Backward-compatible helper matching previous function signature.
-Future<void> login(Map<String, String> body) async {
-  await loginService.loginUser(
+  /// Exchanges a refresh token for a new token pair.
+  ///
+  /// Exposed for repositories that need to refresh eagerly. The
+  /// [AuthInterceptor] handles lazy/automatic refresh on `401` responses.
+  Future<Map<String, dynamic>> refreshToken(String refreshToken) async {
+    final response = await _dioClient.post(
+      ApiEndpoints.refresh,
+      data: {
+        'refreshToken': refreshToken,
+        'expiresInMins': 30,
+      },
+      requiresAuth: false,
+    );
 
-    username: body['username'] ?? '',
-    password: body['password'] ?? '',
-    //
-    
-  );
+    return _asJsonMap(response.data);
+  }
+
+  Map<String, dynamic> _asJsonMap(dynamic data) {
+    if (data is Map<String, dynamic>) return data;
+    if (data is Map) return Map<String, dynamic>.from(data);
+    throw const ApiException(message: 'Unexpected response format.');
+  }
 }

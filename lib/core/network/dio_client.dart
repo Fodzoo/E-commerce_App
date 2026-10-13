@@ -27,6 +27,7 @@ class DioClient {
   DioClient({
     Dio? dio,
     TokenStorage? tokenStorage,
+    Dio? refreshDio,
     String baseUrl = ApiEndpoints.baseUrl,
     Duration connectTimeout = ApiEndpoints.connectTimeout,
     Duration receiveTimeout = ApiEndpoints.receiveTimeout,
@@ -38,13 +39,6 @@ class DioClient {
     OnTokenRefreshedCallback? onTokenRefreshed,
   }) {
     _tokenStorage = tokenStorage ?? InMemoryTokenStorage();
-
-    _authInterceptor = AuthInterceptor(
-      tokenStorage: _tokenStorage,
-      refreshEndpoint: ApiEndpoints.refresh,
-      onUnauthorized: onUnauthorized,
-      onTokenRefreshed: onTokenRefreshed,
-    );
 
     _dio = dio ??
         Dio(
@@ -61,6 +55,15 @@ class DioClient {
             responseType: ResponseType.json,
           ),
         );
+
+    _authInterceptor = AuthInterceptor(
+      tokenStorage: _tokenStorage,
+      refreshDio: refreshDio,
+      retryDio: _dio,
+      refreshEndpoint: ApiEndpoints.refresh,
+      onUnauthorized: onUnauthorized,
+      onTokenRefreshed: onTokenRefreshed,
+    );
 
     // Add interceptors
     _dio.interceptors.add(_authInterceptor);

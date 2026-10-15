@@ -1,7 +1,6 @@
-import 'package:e_commerce/core/services/service_locator.dart';
+import 'package:e_commerce/features/favorites/presentation/views/favorites_view.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/widgets/app_text_field.dart';
 import '../../../../core/responsive/responsive_context.dart';
@@ -17,7 +16,9 @@ class ProductsView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return BlocProvider(
-      create: (_) => ProductsCubit()..loadProducts(),
+      create: (_) =>
+      ProductsCubit()
+        ..loadProducts(),
       child: const _ProductsScreen(),
     );
   }
@@ -55,7 +56,13 @@ class _ProductsScreen extends StatelessWidget {
                           IconButton(
                             icon: const Icon(Icons.favorite_border,
                                 color: AppColors.textSecondary),
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.push(context,
+                                  MaterialPageRoute(builder: (context) {
+                                    return FavoritesView();
+                                  },)
+                              );
+                            },
                           ),
                           IconButton(
                             icon: const Icon(Icons.notifications_none,
@@ -69,7 +76,8 @@ class _ProductsScreen extends StatelessWidget {
                     // Categories Section
                     Padding(
                       padding: EdgeInsets.symmetric(
-                        horizontal: context.responsive(mobile: 16.0, tablet: 40.0),
+                        horizontal: context.responsive(
+                            mobile: 16.0, tablet: 40.0),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -91,13 +99,16 @@ class _ProductsScreen extends StatelessWidget {
 
                     SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
-                      padding: EdgeInsets.symmetric(horizontal: context.spacing.md),
+                      padding: EdgeInsets.symmetric(
+                          horizontal: context.spacing.md),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const CategoryItem(icon: Icons.checkroom, title: 'Shirt'),
+                          const CategoryItem(icon: Icons.checkroom,
+                              title: 'Shirt'),
                           SizedBox(width: context.spacing.md),
-                          const CategoryItem(icon: Icons.work_outline, title: 'Bag'),
+                          const CategoryItem(icon: Icons.work_outline,
+                              title: 'Bag'),
                           SizedBox(width: context.spacing.md),
                           const CategoryItem(
                               icon: Icons.computer, title: 'Equipment'),
@@ -119,7 +130,8 @@ class _ProductsScreen extends StatelessWidget {
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Flash Sale', style: context.textStyles.heading4),
+                          Text('Flash Sale', style: context.textStyles
+                              .heading4),
                           Flexible(
                             child: Text(
                               'See More',
@@ -141,15 +153,16 @@ class _ProductsScreen extends StatelessWidget {
                 builder: (context, state) {
                   return switch (state) {
                     ProductsSuccess(:final products) =>
-                      ProductsGrid(products: products),
+                        ProductsGrid(products: products),
                     ProductsEmpty() => const ProductsEmptySliver(),
-                    ProductsError(:final message) => ProductsErrorSliver(
-                        message: message,
-                        onRetry: () =>
-                            context.read<ProductsCubit>().loadProducts(),
-                      ),
+                    ProductsError(:final message) =>
+                        ProductsErrorSliver(
+                          message: message,
+                          onRetry: () =>
+                              context.read<ProductsCubit>().loadProducts(),
+                        ),
                     ProductsLoading() || ProductsInitial() =>
-                      const ProductsLoadingSliver(),
+                    const ProductsLoadingSliver(),
                   };
                 },
               ),

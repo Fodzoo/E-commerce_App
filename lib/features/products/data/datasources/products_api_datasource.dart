@@ -29,7 +29,6 @@ class ProductsApiDatasource {
     final response = await _dioClient.get(
       ApiEndpoints.products,
       queryParameters: {
-        
         'limit': limit,
         'skip': skip,
       },
@@ -50,4 +49,20 @@ class ProductsApiDatasource {
         .map((e) => ProductModel.fromJson(Map<String, dynamic>.from(e)))
         .toList();
   }
+
+  Future<ProductModel> fetchProductById(int id) async {
+    final response = await _dioClient.get(
+      '${ApiEndpoints.products}/$id',
+    );
+
+    final data = response.data;
+
+    final Map<String, dynamic> productData =
+    data is Map<String, dynamic>
+        ? data
+        : Map<String, dynamic>.from(data as Map);
+
+    return ProductModel.fromJson(productData);
+  }
+
 }

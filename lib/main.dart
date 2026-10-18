@@ -1,6 +1,7 @@
 import 'package:e_commerce/core/services/service_locator.dart';
 import 'package:e_commerce/features/auth/data/repositories/auth_repository.dart';
-import 'package:e_commerce/features/auth/presentation/views/login.dart';
+import 'package:e_commerce/features/auth/presentation/views/login_view.dart';
+import 'package:e_commerce/features/products/presentation/views/offer_view.dart';
 import 'package:flutter/material.dart';
 import 'core/theme/app_theme.dart';
 import 'features/products/presentation/views/products_view.dart';
@@ -27,6 +28,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'E-Commerce',
       theme: AppTheme.light,
+      //refactor 
       home: isLoggedIn ? const ProductsView() : const LoginView(),
       debugShowCheckedModeBanner: false,
     );

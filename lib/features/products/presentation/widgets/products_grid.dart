@@ -19,11 +19,7 @@ class ProductsGrid extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: context.spacing.md),
       sliver: SliverGrid(
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: context.responsive(
-            mobile: 2,
-            tablet: 4,
-            desktop: 6,
-          ),
+          crossAxisCount: context.responsive(mobile: 2, tablet: 4, desktop: 6),
           mainAxisSpacing: context.spacing.md,
           crossAxisSpacing: context.spacing.md,
           childAspectRatio: context.responsive(

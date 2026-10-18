@@ -5,4 +5,7 @@ import '../models/product_model.dart';
 abstract class ProductsRepository {
   /// Returns a page of products.
   Future<List<ProductModel>> getProducts({int limit, int skip});
+
+  /// Returns a single product by its id.
+  Future<ProductModel> getProductById(int id);
 }

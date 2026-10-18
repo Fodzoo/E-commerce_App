@@ -50,4 +50,22 @@ class ProductsApiDatasource {
         .map((e) => ProductModel.fromJson(Map<String, dynamic>.from(e)))
         .toList();
   }
+
+  /// Fetches a single product from `GET /products/{id}`.
+  ///
+  /// Throws [ApiException] on any failure.
+  Future<ProductModel> fetchProductById(int id) async {
+    final response = await _dioClient.get(ApiEndpoints.productById(id));
+
+    final data = response.data;
+    final map = data is Map<String, dynamic>
+        ? data
+        : (data is Map ? Map<String, dynamic>.from(data) : null);
+
+    if (map == null) {
+      throw const ApiException(message: 'Unexpected response format.');
+    }
+
+    return ProductModel.fromJson(map);
+  }
 }

@@ -39,9 +39,7 @@ class MyApp extends StatelessWidget {
 
           if (productId is int) {
             return MaterialPageRoute(
-              builder: (context) => ProductDetailView(
-                productId: productId,
-              ),
+              builder: (context) => ProductDetailView(productId: productId),
               settings: settings,
             );
           }

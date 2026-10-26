@@ -77,14 +77,7 @@ class OfferView extends StatelessWidget {
        SliverToBoxAdapter(
           child: SizedBox(height: 100),
         ),
-        
-        ],  
-
-        //padd
-        
-        
-               
-              
+        ],
             ),
       
         

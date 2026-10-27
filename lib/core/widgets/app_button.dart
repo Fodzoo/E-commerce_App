@@ -5,7 +5,7 @@ import '../theme/app_spacing.dart';
 
 class AppButton extends StatelessWidget {
   final String text;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final bool isOutline;
   final bool isLoading;
 
@@ -29,10 +29,10 @@ class AppButton extends StatelessWidget {
           foregroundColor: isOutline ? AppColors.textSecondary : Colors.white,
           elevation: 0,
           shadowColor: Colors.transparent,
-          side: isOutline ? const BorderSide(color: AppColors.border) : BorderSide.none,
-          shape: RoundedRectangleBorder(
-            borderRadius: AppRadius.sm,
-          ),
+          side: isOutline
+              ? const BorderSide(color: AppColors.border)
+              : BorderSide.none,
+          shape: RoundedRectangleBorder(borderRadius: AppRadius.sm),
         ),
         child: isLoading
             ? const SizedBox(
